@@ -1,0 +1,982 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bomba Hatástalanítási Kézikönyv</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #fff;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(0, 255, 0, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 0, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            pointer-events: none;
+            z-index: 0;
+            animation: gridMove 20s linear infinite;
+        }
+
+        @keyframes gridMove {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(50px, 50px); }
+        }
+
+        .led-indicator {
+            position: fixed;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            z-index: 1000;
+        }
+
+        .led-top-left {
+            top: 20px;
+            left: 20px;
+            background: #00ff00;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.8);
+            animation: ledPulse 2s infinite;
+        }
+
+        .led-top-right {
+            top: 20px;
+            right: 20px;
+            background: #ff4444;
+            box-shadow: 0 0 20px rgba(255, 68, 68, 0.8);
+            animation: ledPulse 2.5s infinite;
+        }
+
+        .led-bottom-left {
+            bottom: 20px;
+            left: 20px;
+            background: #ffaa00;
+            box-shadow: 0 0 20px rgba(255, 170, 0, 0.8);
+            animation: ledPulse 1.8s infinite;
+        }
+
+        .led-bottom-right {
+            bottom: 20px;
+            right: 20px;
+            background: #00ffff;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.8);
+            animation: ledPulse 2.2s infinite;
+        }
+
+        @keyframes ledPulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.4; transform: scale(0.8); }
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        h1::before,
+        h1::after {
+            content: '⚠️';
+            display: inline-block;
+            margin: 0 15px;
+            animation: rotate360 3s linear infinite;
+        }
+
+        @keyframes rotate360 {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        h1 {
+            text-align: center;
+            color: #ff4444;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 0 0 20px rgba(255, 68, 68, 0.5);
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #aaa;
+            margin-bottom: 30px;
+            font-size: 1.1rem;
+        }
+
+        .warning {
+            background: rgba(255, 68, 68, 0.1);
+            border: 2px solid #ff4444;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            animation: warningGlow 2s infinite;
+        }
+
+        .warning::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255, 68, 68, 0.1), transparent);
+            animation: warningShine 3s linear infinite;
+        }
+
+        @keyframes warningGlow {
+            0%, 100% { box-shadow: 0 0 20px rgba(255, 68, 68, 0.3); }
+            50% { box-shadow: 0 0 40px rgba(255, 68, 68, 0.6); }
+        }
+
+        @keyframes warningShine {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .warning h2 {
+            color: #ff4444;
+            margin-bottom: 10px;
+            position: relative;
+            z-index: 1;
+            animation: textPulse 1.5s infinite;
+        }
+
+        @keyframes textPulse {
+            0%, 100% { text-shadow: 0 0 10px rgba(255, 68, 68, 0.5); }
+            50% { text-shadow: 0 0 25px rgba(255, 68, 68, 0.9); }
+        }
+
+        .modules-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .module-card {
+            background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%);
+            border: 3px solid #444;
+            border-radius: 15px;
+            padding: 20px;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .module-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 255, 0, 0.05), transparent);
+            transition: left 0.5s;
+        }
+
+        .module-card:hover::before {
+            left: 100%;
+        }
+
+        .module-card:hover {
+            border-color: #00ff00;
+            box-shadow: 0 0 30px rgba(0, 255, 0, 0.3);
+            transform: translateY(-5px);
+        }
+
+        .module-card:nth-child(even):hover {
+            border-color: #00ffff;
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.3);
+        }
+
+        .module-card:nth-child(3n):hover {
+            border-color: #ffaa00;
+            box-shadow: 0 0 30px rgba(255, 170, 0, 0.3);
+        }
+
+        .module-header {
+            background: #000;
+            color: #00ff00;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            text-align: center;
+            border: 2px solid #00ff00;
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.3);
+            position: relative;
+            animation: headerGlow 3s ease-in-out infinite;
+        }
+
+        @keyframes headerGlow {
+            0%, 100% { box-shadow: 0 0 15px rgba(0, 255, 0, 0.3); }
+            50% { box-shadow: 0 0 25px rgba(0, 255, 0, 0.6); }
+        }
+
+        .module-card:nth-child(even) .module-header {
+            color: #00ffff;
+            border-color: #00ffff;
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
+        }
+
+        .module-card:nth-child(3n) .module-header {
+            color: #ffaa00;
+            border-color: #ffaa00;
+            box-shadow: 0 0 15px rgba(255, 170, 0, 0.3);
+        }
+
+        .module-description {
+            color: #aaa;
+            font-size: 1rem;
+            margin-bottom: 15px;
+            text-align: center;
+            font-style: italic;
+        }
+
+        .module-instructions {
+            background: #000;
+            padding: 15px;
+            border-radius: 8px;
+            border: 2px solid #333;
+            white-space: pre-wrap;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            overflow-x: auto;
+        }
+
+        .module-instructions h3 {
+            color: #ffff00;
+            margin: 10px 0;
+        }
+
+        .example {
+            background: rgba(0, 255, 0, 0.05);
+            border-left: 3px solid #00ff00;
+            padding: 10px;
+            margin: 10px 0;
+            position: relative;
+            transition: all 0.3s;
+        }
+
+        .example:hover {
+            background: rgba(0, 255, 0, 0.1);
+            border-left-width: 5px;
+            padding-left: 15px;
+        }
+
+        .example::before {
+            content: '➤';
+            position: absolute;
+            left: -15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #00ff00;
+            font-size: 1.2rem;
+            opacity: 0;
+            transition: all 0.3s;
+        }
+
+        .example:hover::before {
+            opacity: 1;
+            left: -20px;
+        }
+
+        .serial-info {
+            background: rgba(0, 100, 255, 0.1);
+            border: 2px solid #0066ff;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            position: relative;
+            box-shadow: 0 0 20px rgba(0, 102, 255, 0.2);
+        }
+
+        .serial-info::after {
+            content: '📡';
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 2rem;
+            opacity: 0.3;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .serial-info h2 {
+            color: #0066ff;
+            margin-bottom: 10px;
+            text-shadow: 0 0 10px rgba(0, 102, 255, 0.5);
+        }
+
+        .button-nav {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #ff4444;
+            color: #fff;
+            padding: 15px 30px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: bold;
+            box-shadow: 0 5px 20px rgba(255, 68, 68, 0.5);
+            transition: all 0.3s;
+        }
+
+        .button-nav:hover {
+            background: #ff6666;
+            transform: scale(1.1);
+            box-shadow: 0 5px 30px rgba(255, 68, 68, 0.8);
+        }
+
+        .deco-line {
+            position: fixed;
+            background: linear-gradient(90deg, transparent, rgba(0, 255, 0, 0.2), transparent);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .deco-line-1 {
+            top: 15%;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            animation: lineSlide 8s linear infinite;
+        }
+
+        .deco-line-2 {
+            top: 45%;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            animation: lineSlide 10s linear infinite reverse;
+        }
+
+        .deco-line-3 {
+            top: 75%;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            animation: lineSlide 12s linear infinite;
+        }
+
+        @keyframes lineSlide {
+            0% { opacity: 0; transform: translateX(-100%); }
+            50% { opacity: 1; }
+            100% { opacity: 0; transform: translateX(100%); }
+        }
+
+        @media (max-width: 768px) {
+            .modules-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            h1::before,
+            h1::after {
+                display: none;
+            }
+            
+            .led-indicator {
+                display: none;
+            }
+        }
+
+        .status-header {
+            display: flex;
+            justify-content: space-around;
+            background: rgba(0, 0, 0, 0.7);
+            border: 2px solid #00ff00;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.2);
+        }
+
+        .status-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .status-label {
+            font-size: 0.8rem;
+            color: #888;
+            text-transform: uppercase;
+        }
+
+        .status-value {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #00ff00;
+            text-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+        }
+
+        .status-online {
+            animation: statusBlink 2s infinite;
+        }
+
+        .status-active {
+            color: #ffaa00;
+            text-shadow: 0 0 10px rgba(255, 170, 0, 0.5);
+        }
+
+        @keyframes statusBlink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        .footer-deco {
+            text-align: center;
+            padding: 30px;
+            margin-top: 50px;
+            border-top: 2px solid #333;
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .footer-deco::before {
+            content: '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━';
+            display: block;
+            color: #00ff00;
+            margin-bottom: 15px;
+            opacity: 0.3;
+        }
+    </style>
+</head>
+<body>
+    
+    <div class="led-indicator led-top-left"></div>
+    <div class="led-indicator led-top-right"></div>
+    <div class="led-indicator led-bottom-left"></div>
+    <div class="led-indicator led-bottom-right"></div>
+    
+    
+    <div class="deco-line deco-line-1"></div>
+    <div class="deco-line deco-line-2"></div>
+    <div class="deco-line deco-line-3"></div>
+    
+    <div class="container">
+        
+        <div class="status-header">
+            <div class="status-item">
+                <span class="status-label">RENDSZER:</span>
+                <span class="status-value status-online">ONLINE</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">KÉZIKÖNYV:</span>
+                <span class="status-value status-active">AKTÍV</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">VERZIÓ:</span>
+                <span class="status-value">2.0</span>
+            </div>
+        </div>
+        
+        <h1>💣 BOMBA HATÁSTALANÍTÁSI KÉZIKÖNYV 💣</h1>
+        <p class="subtitle">Keep Talking and Nobody Explodes - Teljes Útmutató</p>
+
+        <div class="warning">
+            <h2>⚠️ FIGYELMEZTETÉS ⚠️</h2>
+            <p><strong>Ez a kézikönyv CSAK a szakertőnek szól!</strong></p>
+            <p>A bombát hatástalanító játékos NEM láthatja ezt a dokumentumot!</p>
+            <p>A szakertő olvassa fel a releváns utasításokat a hatástalanítónak.</p>
+        </div>
+
+        <div class="serial-info">
+            <h2>📋 SZÉRIASZÁM INFORMÁCIÓ</h2>
+            <p>Minden bombának van egy egyedi szériaszáma (pl: <strong>AB3C4D</strong>)</p>
+            <p><strong>⚠️ ÚJ VERZIÓ 2.0:</strong> A vezetékek modul most <strong>EGYSZERŰSÍTETT!</strong></p>
+            <p>✅ <strong>NINCS szériaszám függés</strong> a vezetékek modulban!</p>
+            <p>✅ Csak a vezetékek száma és színe számít!</p>
+        </div>
+
+        <div class="modules-grid">
+            
+            <div class="module-card">
+                <div class="module-header">1. VEZETÉKEK 🆕 EGYSZERŰSÍTETT!</div>
+                <div class="module-description">⚠️ VERZIÓ 2.0 - NINCS szériaszám függés! Csak színek!</div>
+                <div class="module-instructions">
+<strong style="color: #00ff00;">✅ ÚJ! EGYSZERŰSÍTETT SZABÁLYOK - NINCS SZÉRIASZÁM!</strong>
+<strong style="color: #ff4444;">⚠️ FONTOS: Olvass SORRENDBEN! Az ELSŐ feltétel ami teljesül, azt válaszd!</strong>
+
+<strong>=== 3 VEZETÉK ===</strong>
+1. Ha <strong>NINCS piros</strong> → vágd a <strong>2. vezetéket</strong>
+2. Ha az <strong>utolsó vezeték fehér</strong> → vágd az <strong>utolsó vezetéket</strong>
+3. Ha <strong>több mint 1 kék</strong> van → vágd az <strong>utolsó kék vezetéket</strong>
+4. <strong>Különben</strong> → vágd az <strong>utolsó vezetéket</strong>
+
+
+<strong>=== 4 VEZETÉK ===</strong>
+1. Ha <strong>több mint 1 piros</strong> van → vágd az <strong>utolsó piros vezetéket</strong>
+2. Ha az <strong>utolsó vezeték sárga</strong> → vágd az <strong>1. vezetéket</strong>
+3. Ha <strong>pontosan 1 kék</strong> van → vágd az <strong>1. vezetéket</strong>
+4. Ha <strong>több mint 1 sárga</strong> van → vágd az <strong>utolsó vezetéket</strong>
+5. <strong>Különben</strong> → vágd a <strong>2. vezetéket</strong>
+
+
+<strong>=== 5 VEZETÉK ===</strong>
+1. Ha az <strong>utolsó vezeték fekete</strong> → vágd a <strong>4. vezetéket</strong>
+2. Ha <strong>pontosan 1 piros ÉS több mint 1 sárga</strong> → vágd az <strong>1. vezetéket</strong>
+3. Ha <strong>NINCS fekete</strong> vezeték → vágd a <strong>2. vezetéket</strong>
+4. Ha <strong>több mint 1 fehér</strong> van → vágd a <strong>3. vezetéket</strong>
+5. <strong>Különben</strong> → vágd az <strong>1. vezetéket</strong>
+
+
+
+<strong>=== 6 VEZETÉK ===</strong>
+1. Ha <strong>NINCS sárga</strong> → vágd a <strong>3. vezetéket</strong>
+2. Ha <strong>pontosan 1 sárga ÉS több mint 1 fehér</strong> → vágd a <strong>4. vezetéket</strong>
+3. Ha <strong>NINCS piros</strong> → vágd az <strong>utolsó vezetéket</strong>
+4. Ha <strong>több mint 1 kék</strong> van → vágd a <strong>2. vezetéket</strong>
+5. <strong>Különben</strong> → vágd a <strong>4. vezetéket</strong>
+
+
+                </div>
+            </div>
+
+            
+            <div class="module-card">
+                <div class="module-header">2. GOMB - 🔧 JAVÍTOTT!</div>
+                <div class="module-description">Színes gomb felirattal. Nyomd meg vagy tartsd.</div>
+                <div class="module-instructions">
+<strong style="color: #00ff00;">✅ NYOMD MEG (gyorsan) ha:</strong>
+• <strong>KÉK</strong> gomb ÉS <strong>"ABORT"</strong> felirat
+• <strong>PIROS</strong> gomb ÉS <strong>"HOLD"</strong> felirat
+• <strong>KÉK</strong> gomb és <strong>BÁRMILYEN MÁS</strong> felirat (PRESS, DETONATE, stb.)
+
+<strong style="color: #ffff00;">⏱️ TARTSD (500ms+) ha:</strong>
+• <strong>FEHÉR</strong> gomb (bármilyen felirat)
+• <strong>SÁRGA</strong> gomb (bármilyen felirat)
+• <strong>PIROS</strong> gomb ÉS <strong>NEM "HOLD"</strong> (PRESS, DETONATE, ABORT)
+
+<div style="background: rgba(0,255,255,0.1); padding: 15px; margin: 10px 0;">
+<strong style="color: #00ffff;">💡 HA TARTOD:</strong>
+Megjelenik egy LED szám (1, 4, vagy 5):
+
+• Ha <strong>1</strong> látszik → Engedd el amikor <strong>1</strong> van az időben
+• Ha <strong>4</strong> látszik → Engedd el amikor <strong>4</strong> van az időben
+• Ha <strong>5</strong> látszik → Engedd el amikor <strong>5</strong> van az időben
+
+<strong>Példa:</strong> LED: 4 → Idő: 2:04, 2:14, 2:24, stb. ✅
+</div>
+
+<strong style="color: #ff4444;">⚠️ FONTOS:</strong>
+✓ Gyors kattintás = 500ms-nél rövidebb
+✓ Tartás = 500ms+ után látszik az LED
+✓ Tartáskor csak a megfelelő időben engedd el!
+                </div>
+            </div>
+
+            
+            <div class="module-card">
+                <div class="module-header">3. BILLENTYŰZET</div>
+                <div class="module-description">📖 MIND A 12 SZIMBÓLUM - FIX SORREND!</div>
+                <div class="module-instructions">
+<strong style="color: #00ff00;">⚠️ MEGOLDÁS - MIND A 12 SZIMBÓLUM SORRENDBEN:</strong>
+
+<div class="example" style="background: rgba(0, 255, 0, 0.1); border: 3px solid #00ff00; padding: 15px; font-size: 1.1rem;">
+<strong style="font-size: 1.5rem;">HELYES SORREND:</strong>
+
+1. ☆ (Csillag)
+2. ¶ (Beküzdés jel)
+3. Ω (Omega)
+4. Ϙ (Koppa)
+5. ☃ (Hóember)
+6. Ӭ (E cyríl diaerézissel)
+7. ɶ (Kis ő)
+8. ψ (Pszi)
+9. ¿ (Fordított kérdőjel)
+10. λ (Lambda)
+11. Ѭ (Jus cirill)
+12. Ѽ (Omega cirill titlo)
+</div>
+
+<strong>FONTOS:</strong>
+• A játékban mind a 12 szimbólum látszik VÉLETLENSZERŰ elrendezésben
+• A játékosnak MIND A 12-T meg kell nyomni a FENTI sorrendben!
+• Ez a sorrend MINDIG UGYANAZ minden játékban!
+• Rossz sorrend → STRIKE és újrakezdés!
+
+<div class="example">SZAKERTŐ MONDJA:
+"Nyomd meg sorrendben:
+1. Csillag
+2. Beküzdés jel
+3. Omega
+4. Koppa
+5. Hóember
+6. E cyríl diaerézissel
+7. Kis ő
+8. Pszi
+9. Fordított kérdőjel
+10. Lambda
+11. Jus cirill
+12. Omega cirill titlo"</div>
+                </div>
+            </div>
+
+            
+            <div class="module-card">
+                <div class="module-header">4. SIMON SAYS</div>
+                <div class="module-description">ÚJ: 8 kör! Nyomd a START gombot!</div>
+                <div class="module-instructions">
+<strong>⚠️ FONTOS: Nyomd meg a START gombot először!</strong>
+
+<strong>=== 8 KÖR ===</strong>
+Minden körben +1 szín adozik hozzá!
+
+<strong>=== EGYSZERŰSÍTETT SZABÁLYOK: ===</strong>
+Csak ismételd vissza pontosan amit látsz!
+
+PIROS villog → nyomd PIROS
+KÉK villog → nyomd KÉK
+SÁRGA villog → nyomd SÁRGA
+ZÖLD villog → nyomd ZÖLD
+
+<div class="example">PÉLDA:
+Kör 1: PIROS → nyomd PIROS
+Kör 2: PIROS, KÉK → nyomd PIROS, KÉK
+Kör 3: PIROS, KÉK, ZÖLD → nyomd PIROS, KÉK, ZÖLD
+...
+Kör 8: Mind a 8 színt!</div>
+                </div>
+            </div>
+
+            
+            <div class="module-card">
+                <div class="module-header">5. RÁDIÓ FREKVENCIA 📡🎚️</div>
+                <div class="module-description">Hangold be a helyes frekvenciát!</div>
+                <div class="module-instructions">
+<strong style="color: #00ff00;">📡 RÁDIÓ FREKVENCIA - Számításos Logika!</strong>
+
+<strong style="color: #00ff00;">💡 MI A FELADAT?</strong>
+A bomba felszínenén egy rádió frekvencia kijelző látható:
+• <strong>NAGY ZÖLD KIJELZŐ</strong> = Aktuális frekvencia (pl. 3.5 MHz)
+• <strong>4 GOMB</strong> = Hangolás (◀◀ / ◀ / ▶ / ▶▶)
+• <strong>BEÁLLÍT GOMB</strong> = Ellenőrzés
+
+Cél: Számítsd ki a helyes frekvenciát a SOROS SZÁM alapján!
+
+<strong style="color: #00ffff;">🎚️ GOMBOK:</strong>
+
+• <strong>◀◀</strong> = -0.2 MHz (nagy lépés lefelé)
+• <strong>◀</strong> = -0.1 MHz (kis lépés lefelé)
+• <strong>▶</strong> = +0.1 MHz (kis lépés felfelé)
+• <strong>▶▶</strong> = +0.2 MHz (nagy lépés felfelé)
+
+<strong>Tartomány:</strong> 3.5 - 5.5 MHz
+<strong>Formátum:</strong> 1 tizedesjegy (könnyebb!)
+
+<div class="example" style="background: rgba(0,255,0,0.1); padding: 15px;">
+<strong style="color: #00ff00;">📊 EGYSZERŰ KÉPLET:</strong>
+
+A helyes frekvenciát a SOROS SZÁM alapján kell kiszámítani:
+
+```
+Frekvencia = 3.5 + (számjegyek összege × 0.1)
+```
+
+<strong style="color: #ffff00;">ENNYI AZ EGÉSZ!</strong> Csak összeadás és szorzás!</div>
+
+<div class="example" style="background: rgba(0,255,255,0.1); padding: 15px;">
+<strong style="color: #00ffff;">✅ PÉLDA SZÁMÍTÁS 1:</strong>
+
+Soros szám: <strong>AB4C2D</strong>
+
+<strong>Számjegyek:</strong> 4 + 2 = 6
+<strong>Képlet:</strong> 3.5 + (6 × 0.1) = 3.5 + 0.6 = <strong style="color: #00ff00;">4.1 MHz</strong>
+
+✅ <strong>HELYES FREKVENCIA: 4.1</strong></div>
+
+<div class="example" style="background: rgba(255,255,0,0.1); padding: 15px;">
+<strong style="color: #ffff00;">📝 PÉLDA SZÁMÍTÁS 2:</strong>
+
+Soros szám: <strong>XE5K9L</strong>
+
+<strong>Számjegyek:</strong> 5 + 9 = 14
+<strong>Képlet:</strong> 3.5 + (14 × 0.1) = 3.5 + 1.4 = <strong>4.9 MHz</strong>
+
+✅ <strong>HELYES: 4.9 MHz</strong></div>
+
+<strong style="color: #ffff00;">🧠 EGYSZERŰ STRATÉGIA:</strong>
+
+1. <strong>NÉZD</strong> a soros számot (SERIAL NUMBER)
+2. <strong>SZÁMOLD ÖSSZE</strong> a számjegyeket (csak a számokat!)
+3. <strong>SZOROZ</strong> 0.1-gyel
+4. <strong>ADJ HOZZÁ</strong> 3.5-höz
+5. <strong>ÁLLÍTSD BE</strong> a gombokkal
+6. <strong>ELLENŐRIZD</strong> a BEÁLLÍT gombbal
+
+<strong style="color: #00ff00;">PÉLDA:</strong> AB4C2D → 4+2=6 → 3.5+(6×0.1)=4.1
+
+<strong style="color: #ff4444;">⚠️ FONTOS:</strong>
+
+• <strong>TOLERANCIA:</strong> +/- 0.05 MHz elfogadott! (könnyebb!)
+• <strong>STRIKE</strong>-ot kapsz rossz válasznál!
+• <strong>1 TIZEDESJEGY:</strong> Egyszerűbb és gyorsabb!
+• <strong>TÍPUS:</strong> Egyszerű számolás!
+
+<strong style="color: #00ff00;">🎯 TIPPEK:</strong>
+
+✓ CSAK a számjegyeket számold össze (a betűket nem!)
+✓ Példa: AB4C2D → 4 és 2 → 6
+✓ Szorzás 0.1-gyel = osztás 10-zel
+✓ +/- 0.05 hibatűrés van!
+                </div>
+            </div>
+
+            
+            <div class="module-card">
+                <div class="module-header">6. MORSE KÓD</div>
+                <div class="module-description">ÚJ: Dekódold a Morse kódot BETŰKKÉ!</div>
+                <div class="module-instructions">
+<strong>ÚJ RENDSZER:</strong>
+Most egy Morse kód szöveg jelenik meg a kijelzőn.
+Írd be BETŰKKEL hogy mit jelent!
+
+<strong>Lehetséges szavak:</strong>
+SOS, HELLO, BOMB, HELP, CODE, WIRE, BOOM, SAFE, TIME, TICK
+
+<strong>Morse kód:</strong>
+A .-    B -...  C -.-.  D -..
+E .     F ..-.  G --.   H ....
+I ..    J .---  K -.-   L .-..
+M --    N -.    O ---   P .--.
+Q --.-  R .-.   S ...   T -
+U ..-   V ...-  W .--   X -..-
+Y -.--  Z --..
+
+<div class="example">PÉLDA:
+Kijelző: ... --- ...
+→ S O S
+Írd be: SOS</div>
+                </div>
+            </div>
+
+            
+            <div class="module-card">
+                <div class="module-header">7. JELSZÓ - 👍 EGYSZERŰSÍTETT!</div>
+                <div class="module-description">5 betűs jelszó megtalálása - CSAK 12 szó!</div>
+                <div class="module-instructions">
+<strong style="color: #00ff00;">✅ CSAK 12 EGYSZERŰ SZÓ:</strong>
+
+<div style="background: rgba(0,255,0,0.1); padding: 15px; margin: 10px 0;">
+WATER  HOUSE  LIGHT  WORLD
+FIRST  GREAT  SOUND  SMALL
+MAGIC  BLAST  CODES  THING
+</div>
+
+<strong style="color: #ffff00;">🎮 JÁTÉKMENET:</strong>
+• Minden pozíción <strong>4 betű</strong> közül választhatsz (régen 6!)
+• Kattints a betűkre → változnak
+• Próbáld ki a felsorolt szavakat
+• ELLENŐRIZ gomb → beküldés
+
+<strong style="color: #00ffff;">👍 KÖNNYEBB:</strong>
+✓ 40 szó helyett csak 12
+✓ 6 betű/pozíció helyett csak 4
+✓ Egyszerűbb, ismert szavak
+                </div>
+            </div>
+
+            
+            <div class="module-card">
+                <div class="module-header">8. LABIRINTUS - 🔥 IGAZÁN NEHÉZ 8x8!</div>
+                <div class="module-description">🔥 NEHÉZ! 8x8 pálya, láthatatlan falak, 22 LÉPÉS, MINDEN IRÁNYBA!</div>
+                <div class="module-instructions">
+<strong style="color: #ff0000;">⚠️ IGAZÁN NEHÉZ - 8x8 PÁLYA!</strong>
+• <strong>LÁTHATATLAN FALAK</strong> vannak!
+• Ha falba ütközöl → <strong>STRIKE!</strong>
+• Piros villás jelzi a hibát
+• <strong>22 LÉPÉS</strong> a megoldáshoz!
+• <strong>MINDEN IRÁNYBA MEGY:</strong> ↑ FEL, ↓ LE, → JOBBRA, ← BALRA!
+• <strong>Kacskaringós útvonal</strong> - nincs értelmetlen backtracking!
+
+<strong style="color: #00ff00;">CÉL:</strong> Juss el a <strong>ZÖLD négyzetre</strong>!
+(Jobb alsó sarok: <strong>7,7</strong>)
+
+<strong style="color: #00ffff;">Irányítás:</strong>
+▲ - Fel    ▼ - Le    ◀ - Balra    ▶ - Jobbra
+
+<div style="background: rgba(255,0,0,0.15); padding: 15px; margin: 10px 0; border: 3px solid #00ff00;">
+<strong style="color: #00ff00; font-size: 1.4rem;">✅ MEGOLDÁS - 22 LÉPÉS - KACSKARINGÓS!</strong>
+
+<strong style="color: #ffff00;">NYOMD MEG SORRENDBEN: </strong>
+
+<div style="font-size: 1rem; line-height: 1.7; columns: 2; column-gap: 20px;">
+1. ▶ JOBB
+2. ▶ JOBB
+3. ▼ LE
+4. ▼ LE
+5. ◀ <strong>BALRA</strong> 🔄
+6. ◀ <strong>BALRA</strong> 🔄
+7. ▼ LE
+8. ▶ JOBB
+9. ▼ LE
+10. ▼ LE
+11. ▼ LE
+12. ▼ LE
+13. ▶ JOBB
+14. ▲ <strong>FEL</strong> 🔄
+15. ▲ <strong>FEL</strong> 🔄
+16. ▶ JOBB
+17. ▶ JOBB
+18. ▶ JOBB
+19. ▶ JOBB
+20. ▼ LE
+21. ▼ LE
+22. ▶ JOBB 🎯 <strong style="color: #00ff00;">CÉL!</strong>
+</div>
+</div>
+
+<div class="example" style="background: rgba(0,255,255,0.1); padding: 10px; margin-top: 10px;">
+<strong style="color: #00ffff;">🧠 RÖVIDÍTVE:</strong>
+<strong>J-J-L-L-B-B-L-J-L-L-L-L-J-F-F-J-J-J-J-L-L-J</strong>
+
+Csoportok:
+<strong>1-4:</strong> J-J-L-L (jobbra és le)
+<strong>5-6:</strong> B-B (BALRA FORDULÁS!) 🔄
+<strong>7-12:</strong> L-J-L-L-L-L (le-jobb-le sok)
+<strong>13-15:</strong> J-F-F (jobb és FEL FORDULÁS!) 🔄
+<strong>16-22:</strong> J-J-J-J-L-L-J (jobbra csíkkal a célba!)
+</div>
+
+<div class="example" style="background: rgba(255,255,0,0.1); padding: 10px;">
+<strong style="color: #ffff00;">⚠️ FIGYELEM:</strong>
+• NEM látod a falakat!
+• Kövesd <strong>PONTOSAN</strong> az utasításokat!
+• Egy rossz lépés = <strong>STRIKE!</strong>
+• <strong>22 lépés</strong> = Hosszú és kacskaringós!
+• <strong>2x FEL, 2x BALRA</strong> fordulás - érdekesebb!
+• <strong>NINCS értelmetlen vissza-elő mozgás!</strong>
+</div>
+                </div>
+            </div>
+
+            
+            <div class="module-card">
+                <div class="module-header">9. SZÁMSORREND</div>
+                <div class="module-description">Rendezd sorba 1-4-ig.</div>
+                <div class="module-instructions">
+<strong>Feladat:</strong>
+Nyomd meg a gombokat 1 → 2 → 3 → 4 sorrendben!
+
+<div class="example">PÉLDA:
+Ha kijelző: 3 1 4 2
+→ Nyomd: [1] [2] [3] [4]</div>
+
+<strong>Figyelem:</strong>
+Ha hibázol, újrakezdődik!
+                </div>
+            </div>
+
+            
+            <div class="module-card">
+                <div class="module-header">10. SZÍNKÓD</div>
+                <div class="module-description">Dekódold a színeket betűkké.</div>
+                <div class="module-instructions">
+<strong>Színkódok:</strong>
+R = PIROS (Red)
+G = ZÖLD (Green)
+B = KÉK (Blue)
+Y = SÁRGA (Yellow)
+M = MAGENTA
+C = CIÁN (Cyan)
+
+<div class="example">PÉLDA:
+[PIROS][ZÖLD][KÉK] → RGB
+[SÁRGA][MAGENTA][CIÁN] → YMC</div>
+
+Írd be NAGYBETŰVEL, szóköz nélkül!
+                </div>
+            </div>
+
+            
+            <div class="module-card">
+                <div class="module-header">11. GOMB FORGATÁS (ÚJ!)</div>
+                <div class="module-description">Forgasd a gombot a helyes pozícióba LED mintak alapján.</div>
+                <div class="module-instructions">
+<strong>6 LED világít mintat mutat.</strong>
+A minta meghatározza melyik irányba kell forgatni.
+
+<strong>LED MINTÁK:</strong>
+⚫⚪⚫⚪⚫⚪ → UP
+⚪⚫⚪⚫⚪⚫ → DOWN
+⚫⚫⚪⚪⚫⚪ → LEFT
+⚪⚪⚫⚫⚪⚫ → RIGHT
+⚫⚪⚪⚫⚫⚪ → UP (alt)
+⚪⚫⚫⚪⚪⚫ → DOWN (alt)
+
+<div class="example">PÉLDA:
+LED-ek: ⚫⚫⚪⚪⚫⚪
+→ Kattints a LEFT gombra!</div>
+
+<strong>Használat:</strong>
+Egérrel húzhatod vagy a gombokkal választhatod.
+                </div>
+            </div>
+
+            
+            <div class="module-card">
+                <div class="module-header">12. KAPCSOLÓK (ÚJ!)</div>
+                <div class="module-description">4 kapcsolót állíts ON/OFF pozícióba.</div>
+                <div class="module-instructions">
+<strong>FIGYELME Z TETETLEN:</strong>
+Ez egy próbálgatás alapú játék!
+NINCS előre meghatározott szabály!
+
+<strong>Stratégia:</strong>
+1. Próbáld ki a különböző kombinációkat
+2. Ha megoldod, a modul zöldre vált
+3. Ha rossz, NEM kapsz strike-ot
+4. Csak folytasd a próbálkozást!
+
+<div class="example">Lehetséges kombinációk:
+ON-OFF-ON-OFF
+OFF-ON-ON-OFF
+ON-ON-OFF-OFF
+stb...</div>
+
+<strong>Tipp:</strong> System atikusan próbáld végig!
+                </div>
+            </div>
+        </div>
+
+        <div class="footer-deco">
+            <p>⚡ BOMBAHATÁSTALANÍTÁSI KÉZIKÖNYV v2.0 ⚡</p>
+            <p>🔒 BIZALMAS DOKUMENTUM - CSAK SZAKÉRTŐKNEK 🔒</p>
+            <p style="margin-top: 10px; font-size: 0.8rem;">💡 Tipp: Mindig maradj nyugodt és kommunikálj tisztán!</p>
+        </div>
+        
+        <a href="index.html" class="button-nav">↩ Vissza a Bombához</a>
+    </div>
+</body>
+</html>

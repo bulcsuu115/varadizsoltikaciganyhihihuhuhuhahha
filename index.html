@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Keep Talking and Nobody Explodes - 3D Bomba</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="scene-container">
+        <h1 class="game-title">KEEP TALKING AND NOBODY EXPLODES</h1>
+        
+        <div class="status-bar">
+            <div class="timer" id="timer">5:00</div>
+            <div class="strikes">
+                <span class="strike" id="strike1">✗</span>
+                <span class="strike" id="strike2">✗</span>
+                <span class="strike" id="strike3">✗</span>
+            </div>
+            <div class="serial-number">Szériaszám: <span id="serialNumber">AB3C4D</span></div>
+        </div>
+
+        <div class="bomb-container">
+            <div class="bomb" id="bomb">
+                <div class="bomb-face bomb-top">
+                    <div class="module keypad-module" data-module="keypad">
+                        <div class="module-header">BILLENTYŰZET</div>
+                        <div class="keypad-grid">
+                            <button class="keypad-button" data-symbol="☆">☆</button>
+                            <button class="keypad-button" data-symbol="¶">¶</button>
+                            <button class="keypad-button" data-symbol="Ω">Ω</button>
+                            <button class="keypad-button" data-symbol="Ϙ">Ϙ</button>
+                            <button class="keypad-button" data-symbol="☃">☃</button>
+                            <button class="keypad-button" data-symbol="Ӭ">Ӭ</button>
+                            <button class="keypad-button" data-symbol="ɶ">ɶ</button>
+                            <button class="keypad-button" data-symbol="ψ">ψ</button>
+                            <button class="keypad-button" data-symbol="¿">¿</button>
+                            <button class="keypad-button" data-symbol="λ">λ</button>
+                            <button class="keypad-button" data-symbol="Ѭ">Ѭ</button>
+                            <button class="keypad-button" data-symbol="Ѽ">Ѽ</button>
+                        </div>
+                    </div>
+
+                    <div class="module switches-module" data-module="switches">
+                        <div class="module-header">KAPCSOLÓK</div>
+                        <div class="switches-display" id="switchesDisplay">KONFIGURÁCIÓ: ?</div>
+                        <div class="switches-container">
+                            <div class="switch-item">
+                                <div class="switch-label">1</div>
+                                <button class="switch-toggle" data-switch="1" data-state="off">
+                                    <div class="switch-slider"></div>
+                                </button>
+                            </div>
+                            <div class="switch-item">
+                                <div class="switch-label">2</div>
+                                <button class="switch-toggle" data-switch="2" data-state="off">
+                                    <div class="switch-slider"></div>
+                                </button>
+                            </div>
+                            <div class="switch-item">
+                                <div class="switch-label">3</div>
+                                <button class="switch-toggle" data-switch="3" data-state="off">
+                                    <div class="switch-slider"></div>
+                                </button>
+                            </div>
+                            <div class="switch-item">
+                                <div class="switch-label">4</div>
+                                <button class="switch-toggle" data-switch="4" data-state="off">
+                                    <div class="switch-slider"></div>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="module morse-module" data-module="morse">
+                        <div class="module-header">MORSE KÓD</div>
+                        <div class="morse-code-display" id="morseCodeDisplay">- - - - -</div>
+                        <div class="morse-controls">
+                            <input type="text" class="morse-input" id="morseInput" placeholder="Dekódolt szöveg">
+                            <button class="morse-submit" id="morseSubmit">OK</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bomb-face bomb-front">
+                    <div class="module wires-module" data-module="wires">
+                        <div class="module-header">VEZETÉKEK</div>
+                        <div class="wires-container" id="wiresContainer">
+                            <div class="wire wire-red" data-color="red" data-cut="false"></div>
+                            <div class="wire wire-blue" data-color="blue" data-cut="false"></div>
+                            <div class="wire wire-yellow" data-color="yellow" data-cut="false"></div>
+                            <div class="wire wire-white" data-color="white" data-cut="false"></div>
+                            <div class="wire wire-black" data-color="black" data-cut="false"></div>
+                            <div class="wire wire-red" data-color="red" data-cut="false"></div>
+                        </div>
+                    </div>
+
+                    <div class="module frequency-module" data-module="frequency">
+                        <div class="module-header">FREKVENCIA</div>
+                        <div class="frequency-display">
+                            <div class="freq-screen">
+                                <div class="freq-value" id="freqValue">3.5</div>
+                                <div class="freq-unit">MHz</div>
+                            </div>
+                        </div>
+                        <div class="frequency-info" id="frequencyInfo" style="color: #00ffff; font-size: 10px; margin: 5px 0;"></div>
+                        <div class="frequency-controls">
+                            <button class="freq-btn" id="freqDown">◀◀</button>
+                            <button class="freq-btn" id="freqDownSmall">◀</button>
+                            <button class="freq-btn" id="freqUpSmall">▶</button>
+                            <button class="freq-btn" id="freqUp">▶▶</button>
+                        </div>
+                        <button class="freq-submit" id="freqSubmit">BEÁLLÍT</button>
+                    </div>
+
+                    <div class="module button-module" data-module="button">
+                        <div class="module-header">GOMB</div>
+                        <div class="button-container">
+                            <button class="big-button" id="bigButton" data-color="red">
+                                <span class="button-text" id="buttonText">DETONATE</span>
+                            </button>
+                            <div class="button-strip" id="buttonStrip"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bomb-face bomb-left">
+                </div>
+
+                <div class="bomb-face bomb-right">
+                </div>
+
+                <div class="bomb-face bomb-back">
+                    <div class="module password-module" data-module="password">
+                        <div class="module-header">JELSZÓ</div>
+                        <div class="password-container">
+                            <div class="password-display">
+                                <div class="password-letter" id="pass1">-</div>
+                                <div class="password-letter" id="pass2">-</div>
+                                <div class="password-letter" id="pass3">-</div>
+                                <div class="password-letter" id="pass4">-</div>
+                                <div class="password-letter" id="pass5">-</div>
+                            </div>
+                            <button class="password-submit" id="passwordSubmit">ELLENŐRIZ</button>
+                        </div>
+                    </div>
+
+                    <div class="module maze-module" data-module="maze">
+                        <div class="module-header">LABIRINTUS</div>
+                        <div class="maze-container">
+                            <canvas id="mazeCanvas" width="144" height="144"></canvas>
+                            <div class="maze-controls">
+                                <button class="maze-btn" id="mazeUp">▲</button>
+                                <button class="maze-btn" id="mazeDown">▼</button>
+                                <button class="maze-btn" id="mazeLeft">◀</button>
+                                <button class="maze-btn" id="mazeRight">▶</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="module sequence-module" data-module="sequence">
+                        <div class="module-header">SZÁMSORREND</div>
+                        <div class="sequence-display" id="sequenceDisplay">- - - -</div>
+                        <div class="sequence-buttons">
+                            <button class="sequence-btn" data-num="1"></button>
+                            <button class="sequence-btn" data-num="2"></button>
+                            <button class="sequence-btn" data-num="3"></button>
+                            <button class="sequence-btn" data-num="4"></button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bomb-face bomb-bottom">
+                    <div class="module simon-module" data-module="simon">
+                        <div class="module-header">SIMON SAYS</div>
+                        <div class="simon-display" id="simonDisplay">KÖR: 0 / 8</div>
+                        <div class="simon-container">
+                            <div class="simon-buttons">
+                                <button class="simon-button simon-red" data-color="red"></button>
+                                <button class="simon-button simon-blue" data-color="blue"></button>
+                                <button class="simon-button simon-yellow" data-color="yellow"></button>
+                                <button class="simon-button simon-green" data-color="green"></button>
+                            </div>
+                        </div>
+                        <br>
+                        <button class="simon-start" id="simonStart">START</button>
+                    </div>
+
+                    <div class="module colorcode-module" data-module="colorcode">
+                        <div class="module-header">SZÍNKÓD</div>
+                        <div class="colorcode-display">
+                            <div class="color-box" id="color1"></div>
+                            <div class="color-box" id="color2"></div>
+                            <div class="color-box" id="color3"></div>
+                        </div>
+                        <input type="text" class="colorcode-input" id="colorcodeInput" placeholder="Kód">
+                        <button class="colorcode-submit" id="colorcodeSubmit">BEÍR</button>
+                    </div>
+
+                    <div class="module knob-module" data-module="knob">
+                        <div class="module-header">GOMB FORGATÁS</div>
+                        <div class="knob-leds" id="knobLeds">
+                        </div>
+                        <div class="knob-container">
+                            <div class="knob-dial" id="knobDial">
+                                <div class="knob-pointer"></div>
+                            </div>
+                        </div>
+                        <div class="knob-positions">
+                            <span>UP</span>
+                            <span>DOWN</span>
+                            <span>LEFT</span>
+                            <span>RIGHT</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="control-btn" id="startBtn">START</button>
+            <a href="index.html" style="text-decoration: none;color: white;"><button class="control-btn" id="resetBtn">RESET</button></a>
+        </div>
+
+        <div class="message" id="message"></div>
+    </div>
+
+    <script src="ManualAPI.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
